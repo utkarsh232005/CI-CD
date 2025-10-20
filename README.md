@@ -1,23 +1,22 @@
 # Vite React Application with CI/CD Pipeline
 
-A modern React application built with Vite, TypeScript, and Tailwind CSS, featuring automated CI/CD deployment with Docker and GitHub Actions.
+A modern React application built with Vite, TypeScript, and Tailwind CSS, featuring automated CI/CD deployment with GitHub Actions to **Vercel** or **Firebase**.
 
 ## 🚀 Tech Stack
 
 - **Frontend**: React 18 + TypeScript
 - **Build Tool**: Vite
 - **Styling**: Tailwind CSS + shadcn-ui
-- **Containerization**: Docker + Nginx
+- **Containerization**: Docker + Nginx (optional, for self-hosting)
 - **CI/CD**: GitHub Actions
-- **Deployment**: Docker Hub + Remote Server
+- **Deployment**: Vercel (default) or Firebase Hosting
 
 ## 📋 Prerequisites
 
 - Node.js 20+ and npm
-- Docker and Docker Compose
 - Git
 - GitHub account
-- Docker Hub account (for deployment)
+- **Choose one**: Vercel account OR Firebase account
 
 ## 🛠️ Local Development
 
@@ -87,66 +86,81 @@ Triggered on: Push and Pull Requests to `main` and `develop` branches
 4. ✅ Lint code
 5. ✅ Run tests
 6. ✅ Build application
-7. ✅ Build Docker image
-8. ✅ Test Docker container
+7. ✅ Build and test Docker image
 
 ### Continuous Deployment (CD)
 
 Triggered on: Push to `main` branch
 
-**Workflow Steps:**
-1. ✅ Build Docker image
-2. ✅ Push to Docker Hub
-3. ✅ SSH into remote server
-4. ✅ Pull latest image
-5. ✅ Deploy new container
-6. ✅ Clean up old images
+**Default: Deploy to Vercel**
+1. ✅ Build application
+2. ✅ Deploy to Vercel
+3. ✅ Automatic preview URLs for PRs
+4. ✅ Production URL on main branch
 
-## 🔐 GitHub Secrets Setup
+**Alternative: Deploy to Firebase**
+1. ✅ Build application
+2. ✅ Deploy to Firebase Hosting
+3. ✅ Global CDN distribution
+4. ✅ Automatic SSL certificate
 
-Configure these secrets in your GitHub repository:
-`Settings → Secrets and variables → Actions → New repository secret`
+## � Deployment Options
 
-### Required Secrets:
+### Option 1: Vercel (Default - Easiest)
 
-| Secret Name | Description | Example |
-|------------|-------------|---------|
-| `DOCKER_HUB_USERNAME` | Your Docker Hub username | `yourusername` |
-| `DOCKER_HUB_ACCESS_TOKEN` | Docker Hub access token | Create at hub.docker.com/settings/security |
-| `SERVER_IP` | Your server IP address | `123.45.67.89` |
-| `SERVER_USER` | SSH username for server | `ubuntu` or `root` |
-| `SSH_PRIVATE_KEY` | SSH private key for authentication | Your SSH private key content |
-| `SERVER_PORT` | SSH port (optional) | `22` (default) |
+**Setup in 3 steps:**
 
-### Generating SSH Key for Deployment
+1. **Get Vercel credentials:**
+   ```bash
+   npm install -g vercel
+   vercel login
+   vercel link
+   ```
 
-```bash
-# Generate SSH key pair
-ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/deploy_key
+2. **Add GitHub Secrets:**
+   - `VERCEL_TOKEN` - From https://vercel.com/account/tokens
+   - `VERCEL_ORG_ID` - From `.vercel/project.json`
+   - `VERCEL_PROJECT_ID` - From `.vercel/project.json`
 
-# Copy public key to server
-ssh-copy-id -i ~/.ssh/deploy_key.pub user@server-ip
+3. **Deploy:**
+   ```bash
+   git push origin main
+   ```
 
-# Copy private key content for GitHub secret
-cat ~/.ssh/deploy_key
-```
+**Your app will be live at:** `https://your-project.vercel.app`
 
-## 📦 Deployment Architecture
+### Option 2: Firebase Hosting
 
-```
-GitHub Push → CI Workflow → Build & Test → CD Workflow → Docker Hub → Remote Server
-```
+**Setup in 3 steps:**
 
-### Production Deployment Flow:
+1. **Initialize Firebase:**
+   ```bash
+   npm install -g firebase-tools
+   firebase login
+   firebase init hosting
+   ```
 
-1. Push code to `main` branch
-2. GitHub Actions builds Docker image
-3. Image pushed to Docker Hub
-4. SSH connects to production server
-5. Pulls latest image from Docker Hub
-6. Stops old container
-7. Starts new container with latest image
-8. Application live at `http://your-server:3000`
+2. **Add GitHub Secrets:**
+   - `FIREBASE_SERVICE_ACCOUNT` - From Firebase Console
+   - `FIREBASE_PROJECT_ID` - Your Firebase project ID
+
+3. **Switch workflow:**
+   ```bash
+   mv .github/workflows/cd.yml .github/workflows/cd-vercel.yml
+   mv .github/workflows/cd-firebase.yml .github/workflows/cd.yml
+   git push origin main
+   ```
+
+**Your app will be live at:** `https://your-project.web.app`
+
+### Option 3: Docker (Self-Hosting)
+
+**For custom servers/VPS:**
+- See `docker-compose.yml` for local testing
+- See original documentation for Docker Hub deployment
+- Includes Nginx configuration for production
+
+📖 **Full deployment guide:** See [DEPLOYMENT_PLATFORMS.md](./DEPLOYMENT_PLATFORMS.md)
 
 ## 🏗️ Project Structure
 
