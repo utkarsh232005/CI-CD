@@ -3,7 +3,39 @@
 # Colors for output
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
+YELLOW='\0    echo -e "\n${BLUE}Next Steps:${NC}"
+    
+    if [ -f ".vercel/project.json" ]; then
+      echo -e "1. ✅ Project linked! Check the ${YELLOW}.vercel/project.json${NC} file for credentials"
+    else
+      echo -e "1. ${YELLOW}Manual setup required:${NC}"
+      echo -e "   - Go to https://vercel.com and create/import your project"
+      echo -e "   - Or install Vercel CLI locally: ${BLUE}npm install vercel${NC}"
+      echo -e "   - Then run: ${BLUE}npx vercel link${NC}"
+    fi
+    
+    echo -e "\n2. Add these secrets to GitHub (Settings → Secrets → Actions):"
+    echo -e "   - ${YELLOW}VERCEL_TOKEN${NC} - Get from: https://vercel.com/account/tokens"
+    
+    if [ -f ".vercel/project.json" ]; then
+      echo -e "   - ${YELLOW}VERCEL_ORG_ID${NC} - From .vercel/project.json"
+      echo -e "   - ${YELLOW}VERCEL_PROJECT_ID${NC} - From .vercel/project.json"
+      
+      echo -e "\n${BLUE}Your project credentials:${NC}"
+      if command -v jq &> /dev/null; then
+        echo -e "   ORG_ID: ${YELLOW}$(jq -r '.orgId' .vercel/project.json)${NC}"
+        echo -e "   PROJECT_ID: ${YELLOW}$(jq -r '.projectId' .vercel/project.json)${NC}"
+      else
+        echo -e "   Check ${YELLOW}.vercel/project.json${NC} for orgId and projectId"
+      fi
+    else
+      echo -e "   - ${YELLOW}VERCEL_ORG_ID${NC} - From Vercel dashboard or .vercel/project.json"
+      echo -e "   - ${YELLOW}VERCEL_PROJECT_ID${NC} - From Vercel dashboard or .vercel/project.json"
+    fi
+    
+    echo -e "\n3. Push to main branch:"
+    echo -e "   ${BLUE}git push origin main${NC}"
+    echo -e "\n${GREEN}✓ Your app will be live at: https://your-project.vercel.app${NC}"
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
@@ -25,17 +57,56 @@ case $PLATFORM_CHOICE in
     
     # Check if Vercel CLI is installed
     if ! command -v vercel &> /dev/null; then
-      echo -e "${YELLOW}Vercel CLI not found. Installing...${NC}"
-      npm install -g vercel
+      echo -e "${YELLOW}Vercel CLI not found. Let's install it...${NC}\n"
+      echo -e "${BLUE}Choose installation method:${NC}"
+      echo -e "  ${GREEN}1${NC} - Install globally with npm (requires sudo)"
+      echo -e "  ${GREEN}2${NC} - Install locally in project"
+      echo -e "  ${GREEN}3${NC} - Skip CLI and configure manually"
+      echo ""
+      read -p "Enter choice (1-3): " CLI_CHOICE
+      
+      case $CLI_CHOICE in
+        1)
+          echo -e "${YELLOW}Installing globally (you may need to enter your password)...${NC}"
+          sudo npm install -g vercel
+          if ! command -v vercel &> /dev/null; then
+            echo -e "${RED}Global installation failed. Trying local installation...${NC}"
+            npm install vercel
+            VERCEL_CMD="npx vercel"
+          else
+            VERCEL_CMD="vercel"
+          fi
+          ;;
+        2)
+          echo -e "${YELLOW}Installing locally...${NC}"
+          npm install vercel
+          VERCEL_CMD="npx vercel"
+          ;;
+        3)
+          echo -e "${YELLOW}Skipping CLI installation${NC}"
+          VERCEL_CMD=""
+          ;;
+        *)
+          echo -e "${RED}Invalid choice. Installing locally...${NC}"
+          npm install vercel
+          VERCEL_CMD="npx vercel"
+          ;;
+      esac
+    else
+      VERCEL_CMD="vercel"
     fi
     
-    echo -e "${GREEN}✓ Vercel CLI installed${NC}\n"
-    
-    echo -e "${YELLOW}Step 1: Login to Vercel${NC}"
-    vercel login
-    
-    echo -e "\n${YELLOW}Step 2: Link your project${NC}"
-    vercel link
+    if [ -n "$VERCEL_CMD" ]; then
+      echo -e "${GREEN}✓ Vercel CLI ready${NC}\n"
+      
+      echo -e "${YELLOW}Step 1: Login to Vercel${NC}"
+      $VERCEL_CMD login
+      
+      echo -e "\n${YELLOW}Step 2: Link your project${NC}"
+      $VERCEL_CMD link
+    else
+      echo -e "${YELLOW}CLI skipped - manual configuration required${NC}\n"
+    fi
     
     echo -e "\n${GREEN}✓ Project linked!${NC}\n"
     
