@@ -1,4 +1,4 @@
-name: CD - Deploy to Production
+name: CD - Deploy to Firebase
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch: # Allow manual trigger
 
 jobs:
-  deploy-vercel:
+  deploy-firebase:
     runs-on: ubuntu-latest
     environment: production
 
@@ -26,22 +26,21 @@ jobs:
       - name: Build application
         run: npm run build
 
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
-          working-directory: ./
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          channelId: live
+          projectId: ${{ secrets.FIREBASE_PROJECT_ID }}
 
       - name: Deployment notification
         if: always()
         run: |
           if [ "${{ job.status }}" == "success" ]; then
-            echo "✅ Deployment to Vercel successful!"
+            echo "✅ Deployment to Firebase successful!"
             echo "Commit: ${{ github.sha }}"
-            echo "Check your deployment at: https://vercel.com"
+            echo "Check your site at: https://${{ secrets.FIREBASE_PROJECT_ID }}.web.app"
           else
-            echo "❌ Deployment to Vercel failed!"
+            echo "❌ Deployment to Firebase failed!"
           fi
