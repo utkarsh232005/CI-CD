@@ -1,12 +1,13 @@
 # Vite React Application with CI/CD Pipeline
 
-A modern React application built with Vite, TypeScript, and Tailwind CSS, featuring automated CI/CD deployment with GitHub Actions to **Vercel** or **Firebase**.
+A modern React application built with Vite, TypeScript, and Tailwind CSS, featuring automated CI/CD deployment with GitHub Actions to **Vercel** or **Firebase**, plus **real-time deployment monitoring**.
 
 ## 🚀 Tech Stack
 
 - **Frontend**: React 18 + TypeScript
 - **Build Tool**: Vite
 - **Styling**: Tailwind CSS + shadcn-ui
+- **Real-time**: WebSocket server for live monitoring
 - **Containerization**: Docker + Nginx (optional, for self-hosting)
 - **CI/CD**: GitHub Actions
 - **Deployment**: Vercel (default) or Firebase Hosting
@@ -32,9 +33,13 @@ npm install
 
 # Start development server
 npm run dev
+
+# Start real-time monitoring server (optional)
+npm run server
 ```
 
 The app will be available at `http://localhost:5173`
+Real-time dashboard at `http://localhost:5173/dashboard`
 
 ### Available Scripts
 
@@ -42,9 +47,35 @@ The app will be available at `http://localhost:5173`
 npm run dev          # Start development server
 npm run build        # Build for production
 npm run preview      # Preview production build
+npm run server       # Start WebSocket server for real-time monitoring
 npm run lint         # Run ESLint
 npm test            # Run tests (if configured)
 ```
+
+## 🔄 Real-Time Monitoring
+
+### Features
+
+- **Live deployment progress** with progress bars
+- **Real-time log streaming** from GitHub Actions
+- **Manual deployment triggers** from dashboard
+- **GitHub Actions integration** showing workflow status
+- **WebSocket communication** for instant updates
+
+### Quick Setup
+
+```bash
+# 1. Start the WebSocket server
+npm run server
+
+# 2. Start the frontend
+npm run dev
+
+# 3. Visit the dashboard
+open http://localhost:5173/dashboard
+```
+
+📖 **Complete guide**: See [REALTIME_SETUP.md](./REALTIME_SETUP.md)
 
 ## 🐳 Docker Setup
 

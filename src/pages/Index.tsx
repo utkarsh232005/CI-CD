@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { PipelineVisualization } from "@/components/PipelineVisualization";
-import { Activity } from "lucide-react";
+import { Activity, BarChart3 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 type StageStatus = "pending" | "running" | "success" | "failed";
 
@@ -104,19 +106,27 @@ const Index = () => {
               <p className="text-muted-foreground">Real-time deployment status</p>
             </div>
           </div>
-          <Card className="px-6 py-3 bg-card border-border">
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-muted-foreground">Status:</span>
-              <span className={`text-sm font-semibold ${
-                overallStatus === "Success" ? "text-success" :
-                overallStatus === "Failed" ? "text-destructive" :
-                overallStatus === "Running" ? "text-warning" :
-                "text-pending"
-              }`}>
-                {overallStatus}
-              </span>
-            </div>
-          </Card>
+          <div className="flex items-center gap-4">
+            <Link to="/dashboard">
+              <Button variant="outline" className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Real-time Dashboard
+              </Button>
+            </Link>
+            <Card className="px-6 py-3 bg-card border-border">
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-muted-foreground">Status:</span>
+                <span className={`text-sm font-semibold ${
+                  overallStatus === "Success" ? "text-success" :
+                  overallStatus === "Failed" ? "text-destructive" :
+                  overallStatus === "Running" ? "text-warning" :
+                  "text-pending"
+                }`}>
+                  {overallStatus}
+                </span>
+              </div>
+            </Card>
+          </div>
         </div>
 
         {/* Pipeline Info */}

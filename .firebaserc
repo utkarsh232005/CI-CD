@@ -1,4 +1,5 @@
-dist
-.cache
-.firebase
-node_modules
+{
+  "projects": {
+    "default": "your-project-id"
+  }
+}
