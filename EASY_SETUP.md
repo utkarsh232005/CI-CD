@@ -5,13 +5,26 @@
 ### Step 1: Create Vercel Project
 1. Go to [vercel.com](https://vercel.com)
 2. Sign in with GitHub
-3. Click **"New Project"**
-4. **Import your GitHub repository**: `utkarsh232005/CI-CD`
-5. **Framework Preset**: Vite (should auto-detect)
-6. **Root Directory**: `.` (default)
-7. **Build Command**: `npm run build` (default)
-8. **Output Directory**: `dist` (default)
-9. Click **"Deploy"**
+3. **IMPORTANT**: Make sure you're in your **personal account** (not a team)
+   - Look for account switcher in top-left corner
+   - Select `utkarsh232005` (your personal account)
+4. Click **"New Project"**
+5. **Import your GitHub repository**: `utkarsh232005/CI-CD`
+6. **Framework Preset**: Vite (should auto-detect)
+7. **Root Directory**: `.` (default)
+8. **Build Command**: `npm run build` (default)
+9. **Output Directory**: `dist` (default)
+10. Click **"Deploy"**
+
+### Step 1.1: If You Get "Protected Git Scope" Error
+**Error**: "Team does not have permission to deploy from utkarsh232005"
+
+**Solution**:
+1. **Switch to Personal Account**: Click account switcher → select your personal account
+2. **Or Configure Team Access**:
+   - Go to Team Settings
+   - Git Integrations → GitHub → Configure
+   - Add repository access for `utkarsh232005/CI-CD`
 
 ### Step 2: Get Your Project IDs
 1. After deployment, go to **Project Settings**

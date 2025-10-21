@@ -298,6 +298,12 @@ Keep both workflow files active! They'll run in parallel.
 
 ### Vercel Issues
 
+**Problem**: "Team does not have permission to deploy from utkarsh232005 as it is a Protected Git Scope"
+**Solution**: 
+1. Switch to your personal Vercel account (not team account)
+2. Or go to Team Settings → Git Integrations → GitHub → Configure repository access
+3. Make sure you're importing to the correct account that has access to your GitHub repos
+
 **Problem**: Deployment fails with "Project not found"
 **Solution**: Double-check `VERCEL_PROJECT_ID` and `VERCEL_ORG_ID`
 
