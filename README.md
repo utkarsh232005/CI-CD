@@ -41,13 +41,44 @@ npm run server
 The app will be available at `http://localhost:5173`
 Real-time dashboard at `http://localhost:5173/dashboard`
 
-### Available Scripts
+## 🔄 Real-time CI/CD Monitoring
+
+This project includes a **real-time deployment monitoring system** that provides live updates of your CI/CD pipeline status.
+
+### Features
+- 🔄 **Live Pipeline Status**: Watch deployment stages progress in real-time
+- 📊 **Real-time Dashboard**: Comprehensive monitoring with logs and progress
+- 🚀 **Manual Deployment Trigger**: Start deployments from the UI
+- 📡 **WebSocket Integration**: Instant updates without page refresh
+- 🔗 **GitHub Actions Integration**: Automatic updates from GitHub workflows
+
+### Quick Start with Real-time Features
 
 ```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run preview      # Preview production build
-npm run server       # Start WebSocket server for real-time monitoring
+# Start both frontend and backend servers
+./start-dev.sh
+
+# OR manually start both:
+npm run server    # WebSocket server (port 3001)
+npm run dev       # Frontend (port 8080)
+
+# Test deployment trigger
+./test-deployment.sh
+```
+
+### Monitoring URLs
+- **Main Pipeline**: http://localhost:8080
+- **Real-time Dashboard**: http://localhost:8080/dashboard
+- **Server Health**: http://localhost:3001/health
+
+### Real-time Integration
+The system monitors deployment stages:
+1. **Clone Repository** - Fetching latest code
+2. **Build Application** - Installing dependencies and building
+3. **Run Tests** - Executing test suites
+4. **Deploy to Production** - Publishing to deployment platform
+
+See [REALTIME_INTEGRATION.md](./REALTIME_INTEGRATION.md) for detailed documentation.
 npm run lint         # Run ESLint
 npm test            # Run tests (if configured)
 ```

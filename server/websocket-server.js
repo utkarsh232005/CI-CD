@@ -9,7 +9,7 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: process.env.FRONTEND_URL || "http://localhost:5173",
+        origin: process.env.FRONTEND_URL || "http://localhost:8080",
         methods: ["GET", "POST"]
     }
 });
@@ -67,15 +67,18 @@ app.post('/api/deploy', async (req, res) => {
 app.get('/api/github/workflows', async (req, res) => {
     try {
         const response = await octokit.rest.actions.listWorkflowRunsForRepo({
-            owner: 'utkarsh232005',
-            repo: 'CI-CD',
+            owner: process.env.GITHUB_OWNER || 'utkarsh232005',
+            repo: process.env.GITHUB_REPO || 'CI-CD',
             per_page: 10
         });
 
         res.json(response.data);
     } catch (error) {
         console.error('GitHub API error:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            error: error.message,
+            workflow_runs: [] // Return empty array as fallback
+        });
     }
 });
 
