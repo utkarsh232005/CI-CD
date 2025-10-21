@@ -268,12 +268,40 @@ async function simulateDeployment(deploymentId, branch) {
     }
 }
 
+// Root endpoint - Welcome page
+app.get('/', (req, res) => {
+    res.json({
+        name: 'CI/CD WebSocket Server',
+        status: 'running',
+        version: '1.0.0',
+        endpoints: {
+            health: '/health',
+            workflows: '/api/github/workflows',
+            deploy: '/api/deploy (POST)',
+            webhooks: {
+                github: '/api/webhook/github (POST)',
+                deployment: '/api/webhook/deployment (POST)'
+            }
+        },
+        websocket: {
+            status: 'active',
+            connectedClients: io.engine.clientsCount || 0
+        },
+        github: {
+            configured: !!process.env.GITHUB_TOKEN,
+            repository: `${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}`
+        },
+        timestamp: new Date().toISOString()
+    });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.json({
         status: 'ok',
         timestamp: new Date().toISOString(),
-        activeDeployments: activeDeployments.size
+        activeDeployments: activeDeployments.size,
+        connectedClients: io.engine.clientsCount || 0
     });
 });
 
