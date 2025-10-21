@@ -61,28 +61,44 @@ const Index = () => {
   const [stages, setStages] = useState<Stage[]>([]);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState<string>("");
-
-  // Fetch GitHub workflows
-  const fetchWorkflows = async () => {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<string>("");  // Fetch GitHub workflows
+  const fetchWorkflows = async (isManualRefresh = false) => {
     try {
-      setIsLoading(true);
+      if (isManualRefresh) {
+        setIsRefreshing(true);
+      } else if (!workflows.length) {
+        setIsLoading(true);
+      }
+
       const response = await fetch(`${import.meta.env.VITE_WS_URL || 'http://localhost:3001'}/api/github/workflows`);
       if (response.ok) {
         const data = await response.json();
-        setWorkflows(data.workflow_runs || []);
-        
-        // Select the latest workflow if none selected
-        if (data.workflow_runs && data.workflow_runs.length > 0 && !selectedWorkflow) {
-          setSelectedWorkflow(data.workflow_runs[0]);
-          convertWorkflowToStages(data.workflow_runs[0]);
+        const newWorkflows = data.workflow_runs || [];
+
+        // Update workflows
+        setWorkflows(newWorkflows);
+
+        // If we have a selected workflow, try to find its updated version
+        if (selectedWorkflow) {
+          const updatedWorkflow = newWorkflows.find(w => w.id === selectedWorkflow.id);
+          if (updatedWorkflow) {
+            setSelectedWorkflow(updatedWorkflow);
+            convertWorkflowToStages(updatedWorkflow);
+          }
+        } else if (newWorkflows.length > 0) {
+          // Select the latest workflow if none selected
+          setSelectedWorkflow(newWorkflows[0]);
+          convertWorkflowToStages(newWorkflows[0]);
         }
+
         setLastUpdate(new Date().toLocaleTimeString());
       }
     } catch (error) {
       console.error('Failed to fetch workflows:', error);
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -96,8 +112,8 @@ const Index = () => {
         startTime: workflow.created_at,
         duration: workflow.conclusion ? calculateDuration(workflow.created_at, workflow.updated_at) : undefined,
         logs: [
-          `🔄 Workflow: ${workflow.name}`, 
-          `📋 Branch: ${workflow.head_branch}`, 
+          `🔄 Workflow: ${workflow.name}`,
+          `📋 Branch: ${workflow.head_branch}`,
           `📝 Commit: ${workflow.head_sha.substring(0, 7)}`,
           `👤 Actor: ${workflow.actor?.login || 'Unknown'}`
         ]
@@ -114,7 +130,7 @@ const Index = () => {
       const isCompleted = workflow.conclusion === 'success';
       const isFailed = workflow.conclusion === 'failure' || workflow.conclusion === 'cancelled';
       const isCurrent = workflow.status === 'in_progress' && index === 0;
-      
+
       let stageStatus: StageStatus = 'pending';
       if (isCompleted) stageStatus = 'success';
       else if (isFailed) stageStatus = 'failed';
@@ -127,10 +143,10 @@ const Index = () => {
         startTime: workflow.created_at,
         duration: isCompleted ? calculateDuration(workflow.created_at, workflow.updated_at) : undefined,
         logs: [
-          isCompleted ? `✅ ${stage.name} completed successfully` : 
-          isFailed ? `❌ ${stage.name} failed` :
-          isCurrent ? `🔄 ${stage.name} in progress...` : 
-          `⏳ ${stage.name} pending`
+          isCompleted ? `✅ ${stage.name} completed successfully` :
+            isFailed ? `❌ ${stage.name} failed` :
+              isCurrent ? `🔄 ${stage.name} in progress...` :
+                `⏳ ${stage.name} pending`
         ]
       });
     });
@@ -153,7 +169,7 @@ const Index = () => {
     const start = new Date(startTime);
     const end = new Date(endTime);
     const duration = Math.floor((end.getTime() - start.getTime()) / 1000);
-    
+
     if (duration < 60) return `${duration}s`;
     const minutes = Math.floor(duration / 60);
     const seconds = duration % 60;
@@ -163,16 +179,14 @@ const Index = () => {
   // Initialize WebSocket connection for real-time updates
   useEffect(() => {
     const newSocket = io(import.meta.env.VITE_WS_URL || 'http://localhost:3001');
-    setSocket(newSocket);
-
-    // Listen for GitHub workflow events
+    setSocket(newSocket);    // Listen for GitHub workflow events
     newSocket.on('github:workflow', (data) => {
       const { action, workflow } = data;
       console.log('GitHub workflow event:', action, workflow);
-      
-      // Refresh workflows when there's a new event
+
+      // Immediately refresh workflows when there's a new event
       if (action === 'requested' || action === 'in_progress' || action === 'completed') {
-        setTimeout(fetchWorkflows, 1000); // Small delay to ensure GitHub API is updated
+        fetchWorkflows(true);
       }
     });
 
@@ -185,10 +199,23 @@ const Index = () => {
   // Fetch workflows on component mount and set up polling
   useEffect(() => {
     fetchWorkflows();
-    
-    // Poll for updates every 30 seconds
-    const interval = setInterval(fetchWorkflows, 30000);
-    return () => clearInterval(interval);
+
+    // Poll for updates every 15 seconds to avoid rate limiting
+    const interval = setInterval(fetchWorkflows, 15000);
+
+    // Add event listener for when the page becomes visible again
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchWorkflows(true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -201,15 +228,15 @@ const Index = () => {
   }, [selectedWorkflow]);
 
   const refreshWorkflows = async () => {
-    await fetchWorkflows();
+    await fetchWorkflows(true);
   };
 
   const getOverallStatus = (): string => {
     if (!selectedWorkflow) return "No Data";
-    
+
     const status = selectedWorkflow.status;
     const conclusion = selectedWorkflow.conclusion;
-    
+
     if (status === 'completed') {
       if (conclusion === 'success') return "Success";
       if (conclusion === 'failure') return "Failed";
@@ -233,7 +260,7 @@ const Index = () => {
     const date = new Date(dateString);
     const now = new Date();
     const diffMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
+
     if (diffMinutes < 1) return "Just now";
     if (diffMinutes < 60) return `${diffMinutes}m ago`;
     if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)}h ago`;
@@ -261,14 +288,14 @@ const Index = () => {
                 Dashboard
               </Button>
             </Link>
-            <Button 
+            <Button
               onClick={refreshWorkflows}
-              disabled={isLoading}
+              disabled={isLoading || isRefreshing}
               variant="outline"
               className="flex items-center gap-2"
             >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-              Refresh
+              <RefreshCw className={`h-4 w-4 ${isLoading || isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
             </Button>
             <Card className="px-6 py-3 bg-card border-border">
               <div className="flex items-center gap-3">
@@ -286,25 +313,28 @@ const Index = () => {
           <Card className="p-6 bg-card border-border">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-foreground">Recent Workflows</h2>
-              <span className="text-sm text-muted-foreground">Last updated: {lastUpdate}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {isRefreshing ? 'Refreshing...' : `Last updated: ${lastUpdate}`}
+                </span>
+                {isRefreshing && <RefreshCw className="h-3 w-3 animate-spin" />}
+              </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {workflows.slice(0, 6).map((workflow) => (
-                <Card 
+                <Card
                   key={workflow.id}
-                  className={`p-4 cursor-pointer transition-all hover:shadow-md ${
-                    selectedWorkflow?.id === workflow.id ? 'ring-2 ring-primary' : ''
-                  }`}
+                  className={`p-4 cursor-pointer transition-all hover:shadow-md ${selectedWorkflow?.id === workflow.id ? 'ring-2 ring-primary' : ''
+                    }`}
                   onClick={() => setSelectedWorkflow(workflow)}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="font-medium text-sm truncate">{workflow.name}</h3>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      workflow.conclusion === 'success' ? 'bg-green-100 text-green-700' :
+                    <span className={`text-xs px-2 py-1 rounded-full ${workflow.conclusion === 'success' ? 'bg-green-100 text-green-700' :
                       workflow.conclusion === 'failure' ? 'bg-red-100 text-red-700' :
-                      workflow.status === 'in_progress' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-gray-100 text-gray-700'
-                    }`}>
+                        workflow.status === 'in_progress' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-gray-100 text-gray-700'
+                      }`}>
                       {workflow.conclusion || workflow.status}
                     </span>
                   </div>
