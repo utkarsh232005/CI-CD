@@ -84,13 +84,13 @@ const Index = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const overallStatus = stages.some(s => s.status === "failed") 
-    ? "Failed" 
+  const overallStatus = stages.some(s => s.status === "failed")
+    ? "Failed"
     : stages.some(s => s.status === "running")
-    ? "Running"
-    : stages.every(s => s.status === "success")
-    ? "Success"
-    : "Pending";
+      ? "Running"
+      : stages.every(s => s.status === "success")
+        ? "Success"
+        : "Pending";
 
   return (
     <div className="min-h-screen bg-background p-8">
@@ -116,12 +116,11 @@ const Index = () => {
             <Card className="px-6 py-3 bg-card border-border">
               <div className="flex items-center gap-3">
                 <span className="text-sm text-muted-foreground">Status:</span>
-                <span className={`text-sm font-semibold ${
-                  overallStatus === "Success" ? "text-success" :
-                  overallStatus === "Failed" ? "text-destructive" :
-                  overallStatus === "Running" ? "text-warning" :
-                  "text-pending"
-                }`}>
+                <span className={`text-sm font-semibold ${overallStatus === "Success" ? "text-success" :
+                    overallStatus === "Failed" ? "text-destructive" :
+                      overallStatus === "Running" ? "text-warning" :
+                        "text-pending"
+                  }`}>
                   {overallStatus}
                 </span>
               </div>
