@@ -17,25 +17,53 @@ const app = express();
 const server = createServer(app);
 
 // Configure CORS for both development and production
+// Support multiple frontend URLs (comma-separated)
+const frontendUrls = process.env.FRONTEND_URL 
+    ? process.env.FRONTEND_URL.split(',').map(url => url.trim())
+    : [];
+
 const allowedOrigins = [
-    process.env.FRONTEND_URL,
+    ...frontendUrls,
     "http://localhost:8080",
     "http://localhost:5173",
-    "http://localhost:3000"
+    "http://localhost:3000",
+    "http://localhost:5174"
 ].filter(Boolean);
 
+// Dynamic CORS to support Vercel preview deployments
+const corsOptions = {
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        // Check if origin is in allowed list
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        
+        // Allow all Vercel preview deployments (*.vercel.app)
+        if (origin.match(/^https:\/\/.*\.vercel\.app$/)) {
+            return callback(null, true);
+        }
+        
+        // Allow all Netlify preview deployments (*.netlify.app)
+        if (origin.match(/^https:\/\/.*\.netlify\.app$/)) {
+            return callback(null, true);
+        }
+        
+        console.log('⚠️  Blocked by CORS:', origin);
+        callback(new Error('Not allowed by CORS'));
+    },
+    methods: ["GET", "POST", "OPTIONS"],
+    credentials: true,
+    optionsSuccessStatus: 200
+};
+
 const io = new Server(server, {
-    cors: {
-        origin: allowedOrigins,
-        methods: ["GET", "POST"],
-        credentials: true
-    }
+    cors: corsOptions
 });
 
-app.use(cors({
-    origin: allowedOrigins,
-    credentials: true
-}));
+app.use(cors(corsOptions));
 app.use(express.json());
 
 const octokit = new Octokit({
@@ -44,7 +72,9 @@ const octokit = new Octokit({
 
 // Log authentication status on startup
 console.log('🔧 Environment:', process.env.NODE_ENV || 'development');
+console.log('🌍 Configured Frontend URLs:', frontendUrls.join(', ') || 'None');
 console.log('🌍 Allowed Origins:', allowedOrigins.join(', '));
+console.log('🌐 Dynamic CORS: Enabled for *.vercel.app and *.netlify.app');
 console.log('🔑 GitHub Token configured:', !!process.env.GITHUB_TOKEN);
 if (process.env.GITHUB_TOKEN) {
     console.log('🔐 Token starts with:', process.env.GITHUB_TOKEN.substring(0, 10) + '...');
