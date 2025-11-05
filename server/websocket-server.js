@@ -18,7 +18,7 @@ const server = createServer(app);
 
 // Configure CORS for both development and production
 // Support multiple frontend URLs (comma-separated)
-const frontendUrls = process.env.FRONTEND_URL 
+const frontendUrls = process.env.FRONTEND_URL
     ? process.env.FRONTEND_URL.split(',').map(url => url.trim())
     : [];
 
@@ -35,22 +35,22 @@ const corsOptions = {
     origin: (origin, callback) => {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
-        
+
         // Check if origin is in allowed list
         if (allowedOrigins.includes(origin)) {
             return callback(null, true);
         }
-        
+
         // Allow all Vercel preview deployments (*.vercel.app)
         if (origin.match(/^https:\/\/.*\.vercel\.app$/)) {
             return callback(null, true);
         }
-        
+
         // Allow all Netlify preview deployments (*.netlify.app)
         if (origin.match(/^https:\/\/.*\.netlify\.app$/)) {
             return callback(null, true);
         }
-        
+
         console.log('⚠️  Blocked by CORS:', origin);
         callback(new Error('Not allowed by CORS'));
     },
